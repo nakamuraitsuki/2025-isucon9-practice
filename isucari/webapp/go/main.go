@@ -931,7 +931,6 @@ SELECT
 
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
-		sh.status AS shipping_status,
 		sh.reserve_id AS reserve_id
 
 FROM items i
@@ -1001,7 +1000,6 @@ SELECT
 		te.id 							AS transaction_evidence_id,
 		te.status 					AS transaction_evidence_status,
 
-		sh.status 					AS shipping_status,
 		sh.reserve_id 			AS reserve_id
 
 FROM items i
