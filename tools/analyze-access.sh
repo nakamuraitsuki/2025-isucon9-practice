@@ -2,8 +2,8 @@
 
 # alp -m 用パス絞り込み配列(, 区切り)
 PATHS=(
-  "/new_items/*",
-  "/users/*",
+  "/new_items/*"
+  "/users/*"
   "/items/*"
 )
 
