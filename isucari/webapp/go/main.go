@@ -859,13 +859,13 @@ func getUserItems(w http.ResponseWriter, r *http.Request) {
 
 type ItemWithSellerAndBuyerAndCategory struct {
 	Item
-	Seller                    *UserSimple `db:"s"`
-	Buyer                     *UserSimple `db:"b"`
-	Category                  *Category   `db:"c"`
-	TransactionEvidenceID     *int64      `db:"transaction_evidence_id"`
-	TransactionEvidenceStatus *string     `db:"transaction_evidence_status"`
-	ShippingStatus            *string     `db:"shipping_status"`
-	ReserveID                 *string     `db:"reserve_id"`
+	Seller                    *User     `db:"s"`
+	Buyer                     *User     `db:"b"`
+	Category                  *Category `db:"c"`
+	TransactionEvidenceID     *int64    `db:"transaction_evidence_id"`
+	TransactionEvidenceStatus *string   `db:"transaction_evidence_status"`
+	ShippingStatus            *string   `db:"shipping_status"`
+	ReserveID                 *string   `db:"reserve_id"`
 }
 
 func getTransactions(w http.ResponseWriter, r *http.Request) {
@@ -1042,9 +1042,9 @@ LIMIT ?;
 		itemDetails[idx] = ItemDetail{
 			ID:          it.ID,
 			SellerID:    it.SellerID,
-			Seller:      it.Seller,
+			Seller:      &UserSimple{ID: it.Seller.ID, AccountName: it.Seller.AccountName, NumSellItems: it.Seller.NumSellItems},
 			BuyerID:     it.BuyerID,
-			Buyer:       it.Buyer,
+			Buyer:       nil,
 			Status:      it.Status,
 			Name:        it.Name,
 			Price:       it.Price,
@@ -1058,6 +1058,9 @@ LIMIT ?;
 			CreatedAt:      it.CreatedAt.Unix(),
 		}
 
+		if it.Buyer != nil {
+			itemDetails[idx].Buyer = &UserSimple{ID: it.Buyer.ID, AccountName: it.Buyer.AccountName, NumSellItems: it.Buyer.NumSellItems}
+		}
 		if it.ShippingStatus != nil {
 			itemDetails[idx].ShippingStatus = *it.ShippingStatus
 		}
