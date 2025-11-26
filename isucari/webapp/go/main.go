@@ -1061,19 +1061,16 @@ LIMIT ?;
 		}
 
 		// TransactionEvidence がある場合だけ goroutine で Shipping API を呼ぶ
-		if it.TransactionEvidenceID > 0 {
+		if it.TransactionEvidenceID > 0 && it.ReserveID != "" {
+			idx := idx // クロージャに安全に渡す
+			reserveID := it.ReserveID
 			g.Go(func() error {
-				if it.ReserveID == "" {
-					return fmt.Errorf("shipping not found for item %d", it.ID)
-				}
-
 				ssr, err := APIShipmentStatus(getShipmentServiceURL(), &APIShipmentStatusReq{
-					ReserveID: it.ReserveID,
+					ReserveID: reserveID,
 				})
 				if err != nil {
 					return err
 				}
-
 				itemDetails[idx].ShippingStatus = ssr.Status
 				return nil
 			})
