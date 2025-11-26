@@ -966,7 +966,7 @@ LIMIT ?;
 		)
 		if err != nil {
 			log.Print(err)
-			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
 			tx.Rollback()
 			return
 		}
@@ -1000,7 +1000,7 @@ SELECT
 
 		te.id 							AS transaction_evidence_id,
 		te.status 					AS transaction_evidence_status,
-		
+
 		sh.status 					AS shipping_status,
 		sh.reserve_id 			AS reserve_id
 
@@ -1029,7 +1029,7 @@ LIMIT ?;
 		)
 		if err != nil {
 			log.Print(err)
-			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
 			tx.Rollback()
 			return
 		}
@@ -1087,7 +1087,7 @@ LIMIT ?;
 	// すべての goroutine 完了を待つ
 	if err := g.Wait(); err != nil {
 		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "failed to fetch shipping status")
+		outputErrorMsg(w, http.StatusInternalServerError, err.Error())
 		tx.Rollback()
 		return
 	}
