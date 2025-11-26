@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/jmoiron/sqlx v1.4.0
 	golang.org/x/crypto v0.45.0
+	golang.org/x/sync v0.18.0
 )
 
 require filippo.io/edwards25519 v1.1.0 // indirect
