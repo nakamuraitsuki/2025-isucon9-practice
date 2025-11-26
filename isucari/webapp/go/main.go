@@ -1057,7 +1057,7 @@ LIMIT ?;
 			Description: it.Description,
 			ImageURL:    getImageURL(it.ImageName),
 			CategoryID:  it.CategoryID,
-			// TransactionEvidenceID
+			TransactionEvidenceID: 0,
 			// TransactionEvidenceStatus
 			ShippingStatus: "",
 			Category:       it.Category,
@@ -1066,6 +1066,9 @@ LIMIT ?;
 
 		if it.BuyerID > 0 {
 			itemDetails[idx].Buyer = &UserSimple{ID: *it.Buyer.ID, AccountName: *it.Buyer.AccountName, NumSellItems: *it.Buyer.NumSellItems}
+		}
+		if it.TransactionEvidenceID != nil {
+			itemDetails[idx].TransactionEvidenceID = *it.TransactionEvidenceID
 		}
 		if it.TransactionEvidenceStatus != nil {
 			itemDetails[idx].TransactionEvidenceStatus = *it.TransactionEvidenceStatus
