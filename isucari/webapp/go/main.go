@@ -1067,9 +1067,6 @@ LIMIT ?;
 		if it.BuyerID > 0 {
 			itemDetails[idx].Buyer = &UserSimple{ID: *it.Buyer.ID, AccountName: *it.Buyer.AccountName, NumSellItems: *it.Buyer.NumSellItems}
 		}
-		if it.ShippingStatus != nil {
-			itemDetails[idx].ShippingStatus = *it.ShippingStatus
-		}
 		if it.TransactionEvidenceStatus != nil {
 			itemDetails[idx].TransactionEvidenceStatus = *it.TransactionEvidenceStatus
 		}
