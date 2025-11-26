@@ -864,7 +864,7 @@ type ItemWithSellerAndBuyerAndCategory struct {
 	Category                  *Category `db:"c"`
 	TransactionEvidenceID     *int64    `db:"transaction_evidence_id"`
 	TransactionEvidenceStatus *string   `db:"transaction_evidence_status"`
-	ShippingStatus            *string   `db:"shipping_status"`
+	ShippingStatus            string   `db:"shipping_status"`
 	ReserveID                 *string   `db:"reserve_id"`
 }
 
