@@ -862,10 +862,10 @@ type ItemWithSellerAndBuyerAndCategory struct {
 	Seller                    *UserSimple `db:"s"`
 	Buyer                     *UserSimple `db:"b"`
 	Category                  *Category   `db:"c"`
-	TransactionEvidenceID     int64       `db:"te.id"`
-	TransactionEvidenceStatus string      `db:"te.status"`
-	ShippingStatus            string      `db:"sh.status"`
-	ReserveID                 string      `db:"sh.reserve_id"`
+	TransactionEvidenceID     *int64       `db:"transaction_evidence_id"`
+	TransactionEvidenceStatus *string      `db:"transaction_evidence_status"`
+	ShippingStatus            *string      `db:"shipping_status"`
+	ReserveID                 *string      `db:"reserve_id"`
 }
 
 func getTransactions(w http.ResponseWriter, r *http.Request) {
@@ -1053,20 +1053,27 @@ LIMIT ?;
 			Description:               it.Description,
 			ImageURL:                  getImageURL(it.ImageName),
 			CategoryID:                it.CategoryID,
-			TransactionEvidenceID:     it.TransactionEvidenceID,
-			TransactionEvidenceStatus: it.TransactionEvidenceStatus,
+			// TransactionEvidenceID  
+			// TransactionEvidenceStatus
 			ShippingStatus:            "",
 			Category:                  it.Category,
 			CreatedAt:                 it.CreatedAt.Unix(),
 		}
 
+		if(it.ShippingStatus != nil) {
+			itemDetails[idx].ShippingStatus = *it.ShippingStatus
+		}
+		if(it.TransactionEvidenceStatus != nil) {
+			itemDetails[idx].ShippingStatus = *it.TransactionEvidenceStatus
+		}
+
 		// TransactionEvidence がある場合だけ goroutine で Shipping API を呼ぶ
-		if it.TransactionEvidenceID > 0 && it.ReserveID != "" {
+		if itemDetails[idx].TransactionEvidenceID > 0 && it.ReserveID != nil && *it.ReserveID != "" {
 			idx := idx // クロージャに安全に渡す
 			reserveID := it.ReserveID
 			g.Go(func() error {
 				ssr, err := APIShipmentStatus(getShipmentServiceURL(), &APIShipmentStatusReq{
-					ReserveID: reserveID,
+					ReserveID: *reserveID,
 				})
 				if err != nil {
 					return err
