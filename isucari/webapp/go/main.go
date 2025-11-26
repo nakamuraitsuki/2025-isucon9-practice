@@ -1071,7 +1071,7 @@ LIMIT ?;
 			itemDetails[idx].ShippingStatus = *it.ShippingStatus
 		}
 		if it.TransactionEvidenceStatus != nil {
-			itemDetails[idx].ShippingStatus = *it.TransactionEvidenceStatus
+			itemDetails[idx].TransactionEvidenceStatus = *it.TransactionEvidenceStatus
 		}
 
 		// TransactionEvidence がある場合だけ goroutine で Shipping API を呼ぶ
