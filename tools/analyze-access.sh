@@ -6,6 +6,8 @@ PATHS=(
   "/users/transactions.json"
   "/users/[0-9]+.json"
   "/items/*"
+  "/transactions/*.png"
+  "/upload/*.jpg"
 )
 
 # 出力先ディレクトリを作成
