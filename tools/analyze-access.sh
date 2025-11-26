@@ -1,7 +1,11 @@
 #!/bin/sh
 
 # alp -m 用パス絞り込み配列(, 区切り)
-PATHS=()
+PATHS=(
+  "/new_items/*",
+  "/users/*",
+  "/items/*"
+)
 
 # 出力先ディレクトリを作成
 mkdir -p /home/isucon/report
