@@ -1,8 +1,12 @@
 *
 !.gitignore
 
-# goファイル
+# webapp
 !isucari
 !isucari/webapp
+
 !isucari/webapp/go
 !isucari/webapp/go/*
+
+!isucari/webapp/sql
+!isucari/webapp/sql/*
