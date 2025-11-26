@@ -904,29 +904,29 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		// paging
 		err := tx.Select(&items, `
 SELECT
-    i.id            AS "id",
-    i.seller_id     AS "seller_id",
-    i.buyer_id      AS "buyer_id",
-    i.status        AS "status",
-    i.name          AS "name",
-    i.price         AS "price",
-    i.description   AS "description",
-    i.image_name    AS "image_name",
-    i.category_id   AS "category_id",
-    i.created_at    AS "created_at",
-    i.updated_at    AS "updated_at",
+    i.id AS "id",
+    i.seller_id AS "seller_id",
+    i.buyer_id AS "buyer_id",
+    i.status AS "status",
+    i.name AS "name",
+    i.price AS "price",
+    i.description AS "description",
+    i.image_name AS "image_name",
+    i.category_id AS "category_id",
+    i.created_at AS "created_at",
+    i.updated_at AS "updated_at",
 
-    s.id            AS "s.id",
-    s.account_name  AS "s.account_name",
+    s.id AS "s.id",
+    s.account_name AS "s.account_name",
     s.num_sell_items AS "s.num_sell_items",
 
-    b.id            AS "b.id",
-    b.account_name  AS "b.account_name",
+    b.id AS "b.id",
+    b.account_name AS "b.account_name",
     b.num_sell_items AS "b.num_sell_items",
 
-    c.id                  AS "c.id",
-    c.parent_id           AS "c.parent_id",
-    c.category_name       AS "c.category_name",
+    c.id AS "c.id",
+    c.parent_id AS "c.parent_id",
+    c.category_name AS "c.category_name",
     c.parent_category_name AS "c.parent_category_name"
 
 		te.id AS transaction_evidence_id,
@@ -973,34 +973,34 @@ LIMIT ?;
 		// 1st page
 		err := tx.Select(&items, `
 SELECT
-    i.id            AS "id",
-    i.seller_id     AS "seller_id",
-    i.buyer_id      AS "buyer_id",
-    i.status        AS "status",
-    i.name          AS "name",
-    i.price         AS "price",
-    i.description   AS "description",
-    i.image_name    AS "image_name",
-    i.category_id   AS "category_id",
-    i.created_at    AS "created_at",
-    i.updated_at    AS "updated_at",
+    i.id AS "id",
+    i.seller_id AS "seller_id",
+    i.buyer_id AS "buyer_id",
+    i.status AS "status",
+    i.name AS "name",
+    i.price AS "price",
+    i.description AS "description",
+    i.image_name AS "image_name",
+    i.category_id AS "category_id",
+    i.created_at AS "created_at",
+    i.updated_at AS "updated_at",
 
-    s.id            	AS "s.id",
-    s.account_name  	AS "s.account_name",
-    s.num_sell_items 	AS "s.num_sell_items",
+    s.id AS "s.id",
+    s.account_name AS "s.account_name",
+    s.num_sell_items AS "s.num_sell_items",
 
-    b.id            				AS "b.id",
-    b.account_name  				AS "b.account_name",
-    b.num_sell_items 				AS "b.num_sell_items",
-    c.id                  	AS "c.id",
-    c.parent_id           	AS "c.parent_id",
-    c.category_name       	AS "c.category_name",
-    c.parent_category_name 	AS "c.parent_category_name"
+    b.id AS "b.id",
+    b.account_name AS "b.account_name",
+    b.num_sell_items AS "b.num_sell_items",
+    c.id AS "c.id",
+    c.parent_id AS "c.parent_id",
+    c.category_name AS "c.category_name",
+    c.parent_category_name AS "c.parent_category_name"
 
-		te.id 							AS transaction_evidence_id,
-		te.status 					AS transaction_evidence_status,
+		te.id AS transaction_evidence_id,
+		te.status AS transaction_evidence_status,
 
-		sh.reserve_id 			AS reserve_id
+		sh.reserve_id AS reserve_id
 
 FROM items i
 LEFT JOIN users s ON i.seller_id = s.id
