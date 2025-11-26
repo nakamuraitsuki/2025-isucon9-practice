@@ -859,19 +859,19 @@ func getUserItems(w http.ResponseWriter, r *http.Request) {
 
 type ItemWithSellerAndBuyerAndCategory struct {
 	Item
-	Seller                    *UserToItemJOIN     `db:"s"`
-	Buyer                     *UserToItemJOIN     `db:"b"`
-	Category                  *Category `db:"c"`
-	TransactionEvidenceID     *int64    `db:"transaction_evidence_id"`
-	TransactionEvidenceStatus *string   `db:"transaction_evidence_status"`
-	ShippingStatus            string   `db:"shipping_status"`
-	ReserveID                 *string   `db:"reserve_id"`
+	Seller                    *UserToItemJOIN `db:"s"`
+	Buyer                     *UserToItemJOIN `db:"b"`
+	Category                  *Category       `db:"c"`
+	TransactionEvidenceID     *int64          `db:"transaction_evidence_id"`
+	TransactionEvidenceStatus *string         `db:"transaction_evidence_status"`
+	ShippingStatus            string          `db:"shipping_status"`
+	ReserveID                 *string         `db:"reserve_id"`
 }
 
 type UserToItemJOIN struct {
-	ID 			*int64  `db:"id"`
-	AccountName *string `db:"account_name"`
-	NumSellItems *int   `db:"num_sell_items"`
+	ID           *int64  `db:"id"`
+	AccountName  *string `db:"account_name"`
+	NumSellItems *int    `db:"num_sell_items"`
 }
 
 func getTransactions(w http.ResponseWriter, r *http.Request) {
@@ -1046,17 +1046,17 @@ LIMIT ?;
 		idx := i
 		it := item
 		itemDetails[idx] = ItemDetail{
-			ID:          it.ID,
-			SellerID:    it.SellerID,
-			Seller:      &UserSimple{ID: *it.Seller.ID, AccountName: *it.Seller.AccountName, NumSellItems: *it.Seller.NumSellItems},
-			BuyerID:     it.BuyerID,
-			Buyer:       nil,
-			Status:      it.Status,
-			Name:        it.Name,
-			Price:       it.Price,
-			Description: it.Description,
-			ImageURL:    getImageURL(it.ImageName),
-			CategoryID:  it.CategoryID,
+			ID:                    it.ID,
+			SellerID:              it.SellerID,
+			Seller:                &UserSimple{ID: *it.Seller.ID, AccountName: *it.Seller.AccountName, NumSellItems: *it.Seller.NumSellItems},
+			BuyerID:               it.BuyerID,
+			Buyer:                 nil,
+			Status:                it.Status,
+			Name:                  it.Name,
+			Price:                 it.Price,
+			Description:           it.Description,
+			ImageURL:              getImageURL(it.ImageName),
+			CategoryID:            it.CategoryID,
 			TransactionEvidenceID: 0,
 			// TransactionEvidenceStatus
 			ShippingStatus: "",
