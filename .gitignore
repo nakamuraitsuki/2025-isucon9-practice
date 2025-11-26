@@ -10,3 +10,5 @@
 
 !isucari/webapp/sql
 !isucari/webapp/sql/*
+!backup
+!backup/*
