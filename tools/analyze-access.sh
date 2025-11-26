@@ -1,9 +1,10 @@
 #!/bin/sh
 
-# alp -m 用パス絞り込み配列(, 区切り)
+# alp -m 用パス絞り込み配列
 PATHS=(
   "/new_items/*"
-  "/users/*"
+  "/users/transactions.json"
+  "/users/[0-9]+.json"
   "/items/*"
 )
 
