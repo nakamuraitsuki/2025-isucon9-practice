@@ -927,7 +927,7 @@ SELECT
     c.id AS "c.id",
     c.parent_id AS "c.parent_id",
     c.category_name AS "c.category_name",
-    c.parent_category_name AS "c.parent_category_name"
+    c.parent_category_name AS "c.parent_category_name",
 
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
@@ -995,7 +995,7 @@ SELECT
     c.id AS "c.id",
     c.parent_id AS "c.parent_id",
     c.category_name AS "c.category_name",
-    c.parent_category_name AS "c.parent_category_name"
+    c.parent_category_name AS "c.parent_category_name",
 
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
