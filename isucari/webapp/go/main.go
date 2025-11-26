@@ -862,10 +862,10 @@ type ItemWithSellerAndBuyerAndCategory struct {
 	Seller                    *UserSimple `db:"s"`
 	Buyer                     *UserSimple `db:"b"`
 	Category                  *Category   `db:"c"`
-	TransactionEvidenceID     *int64       `db:"transaction_evidence_id"`
-	TransactionEvidenceStatus *string      `db:"transaction_evidence_status"`
-	ShippingStatus            *string      `db:"shipping_status"`
-	ReserveID                 *string      `db:"reserve_id"`
+	TransactionEvidenceID     *int64      `db:"transaction_evidence_id"`
+	TransactionEvidenceStatus *string     `db:"transaction_evidence_status"`
+	ShippingStatus            *string     `db:"shipping_status"`
+	ReserveID                 *string     `db:"reserve_id"`
 }
 
 func getTransactions(w http.ResponseWriter, r *http.Request) {
@@ -929,10 +929,10 @@ SELECT
     c.category_name       AS "c.category_name",
     c.parent_category_name AS "c.parent_category_name"
 
-		te.id AS "te.id",
-		te.status AS "te.status",
-		sh.status AS "sh.status",
-		sh.reserve_id AS "sh.reserve_id"
+		te.id AS transaction_evidence_id,
+		te.status AS transaction_evidence_status,
+		sh.status AS shipping_status,
+		sh.reserve_id AS reserve_id
 
 FROM items i
 LEFT JOIN users s ON i.seller_id = s.id
@@ -986,23 +986,23 @@ SELECT
     i.created_at    AS "created_at",
     i.updated_at    AS "updated_at",
 
-    s.id            AS "s.id",
-    s.account_name  AS "s.account_name",
-    s.num_sell_items AS "s.num_sell_items",
+    s.id            	AS "s.id",
+    s.account_name  	AS "s.account_name",
+    s.num_sell_items 	AS "s.num_sell_items",
 
-    b.id            AS "b.id",
-    b.account_name  AS "b.account_name",
-    b.num_sell_items AS "b.num_sell_items",
+    b.id            				AS "b.id",
+    b.account_name  				AS "b.account_name",
+    b.num_sell_items 				AS "b.num_sell_items",
+    c.id                  	AS "c.id",
+    c.parent_id           	AS "c.parent_id",
+    c.category_name       	AS "c.category_name",
+    c.parent_category_name 	AS "c.parent_category_name"
 
-    c.id                  AS "c.id",
-    c.parent_id           AS "c.parent_id",
-    c.category_name       AS "c.category_name",
-    c.parent_category_name AS "c.parent_category_name"
-
-		te.id AS "te.id",
-		te.status AS "te.status",
-		sh.status AS "sh.status",
-		sh.reserve_id AS "sh.reserve_id"
+		te.id 							AS transaction_evidence_id,
+		te.status 					AS transaction_evidence_status,
+		
+		sh.status 					AS shipping_status,
+		sh.reserve_id 			AS reserve_id
 
 FROM items i
 LEFT JOIN users s ON i.seller_id = s.id
@@ -1042,28 +1042,28 @@ LIMIT ?;
 		idx := i
 		it := item
 		itemDetails[idx] = ItemDetail{
-			ID:                        it.ID,
-			SellerID:                  it.SellerID,
-			Seller:                    it.Seller,
-			BuyerID:                   it.BuyerID,
-			Buyer:                     it.Buyer,
-			Status:                    it.Status,
-			Name:                      it.Name,
-			Price:                     it.Price,
-			Description:               it.Description,
-			ImageURL:                  getImageURL(it.ImageName),
-			CategoryID:                it.CategoryID,
-			// TransactionEvidenceID  
+			ID:          it.ID,
+			SellerID:    it.SellerID,
+			Seller:      it.Seller,
+			BuyerID:     it.BuyerID,
+			Buyer:       it.Buyer,
+			Status:      it.Status,
+			Name:        it.Name,
+			Price:       it.Price,
+			Description: it.Description,
+			ImageURL:    getImageURL(it.ImageName),
+			CategoryID:  it.CategoryID,
+			// TransactionEvidenceID
 			// TransactionEvidenceStatus
-			ShippingStatus:            "",
-			Category:                  it.Category,
-			CreatedAt:                 it.CreatedAt.Unix(),
+			ShippingStatus: "",
+			Category:       it.Category,
+			CreatedAt:      it.CreatedAt.Unix(),
 		}
 
-		if(it.ShippingStatus != nil) {
+		if it.ShippingStatus != nil {
 			itemDetails[idx].ShippingStatus = *it.ShippingStatus
 		}
-		if(it.TransactionEvidenceStatus != nil) {
+		if it.TransactionEvidenceStatus != nil {
 			itemDetails[idx].ShippingStatus = *it.TransactionEvidenceStatus
 		}
 
