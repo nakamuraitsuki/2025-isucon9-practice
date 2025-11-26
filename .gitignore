@@ -10,5 +10,16 @@
 
 !isucari/webapp/sql
 !isucari/webapp/sql/*
+
 !backup
-!backup/*
+
+!backup/mysql
+!backup/mysql/conf.d
+!backup/mysql/conf.d/*
+!backup/mysql/mysql.conf.d
+!backup/mysql/mysql.conf.d/*
+
+!backup/nginx
+!backup/nginx/*
+!backup/nginx/sites-available
+!backup/nginx/sites-available/*
