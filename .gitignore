@@ -23,3 +23,6 @@
 !backup/nginx/*
 !backup/nginx/sites-available
 !backup/nginx/sites-available/*
+
+!tools
+!tools/*.sh
