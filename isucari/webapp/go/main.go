@@ -686,7 +686,7 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 		)
 		if err != nil {
 			log.Print(err)
-			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	} else {
@@ -700,7 +700,7 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 		)
 		if err != nil {
 			log.Print(err)
-			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
