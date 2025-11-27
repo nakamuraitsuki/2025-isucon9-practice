@@ -676,7 +676,7 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 		// paging
 		inQuery, inArgs, err = sqlx.In(`
 (SELECT * FROM items
- WHERE status = ?
+ WHERE status = "on_sale"
    AND category_id IN (?)
    AND (created_at, id) < (?, ?)
  ORDER BY created_at DESC, id DESC
@@ -685,7 +685,7 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 UNION ALL
 
 (SELECT * FROM items
- WHERE status = ?
+ WHERE status = "sold_out"
    AND category_id IN (?)
    AND (created_at, id) < (?, ?)
  ORDER BY created_at DESC, id DESC
@@ -693,12 +693,10 @@ UNION ALL
 
 ORDER BY created_at DESC, id DESC
 LIMIT ?`,
-			ItemStatusOnSale,
 			categoryIDs,
 			time.Unix(createdAt, 0),
 			itemID,
 			ItemsPerPage+1,
-			ItemStatusSoldOut,
 			categoryIDs,
 			time.Unix(createdAt, 0),
 			itemID,
@@ -714,22 +712,20 @@ LIMIT ?`,
 		// 1st page
 		inQuery, inArgs, err = sqlx.In(`
 (SELECT * FROM items
- WHERE status = ?
+ WHERE status = "on_sale"
 	 AND category_id IN (?)
  ORDER BY created_at DESC, id DESC
  LIMIT ?)
 UNION ALL
 (SELECT * FROM items
- WHERE status = ?
+ WHERE status = "sold_out"
 	 AND category_id IN (?)
  ORDER BY created_at DESC, id DESC
  LIMIT ?)
 ORDER BY created_at DESC, id DESC
 LIMIT ?`,
-			ItemStatusOnSale,
 			categoryIDs,
 			ItemsPerPage+1,
-			ItemStatusSoldOut,
 			categoryIDs,
 			ItemsPerPage+1,
 			ItemsPerPage+1,
