@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -1456,8 +1457,12 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(2)
+
 	// 並列で配送API
 	go func() {
+		defer waitGroup.Done()
 		scr, _ := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
 			ToAddress:   buyer.Address,
 			ToName:      buyer.AccountName,
@@ -1479,6 +1484,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 	// 並列で決済API
 	go func() {
+		defer waitGroup.Done()
 		pstr, paymentErr := APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
 			ShopID: PaymentServiceIsucariShopID,
 			Token:  rb.Token,
@@ -1507,6 +1513,8 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}()
+
+	waitGroup.Wait()
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(resBuy{TransactionEvidenceID: transactionEvidenceID})
