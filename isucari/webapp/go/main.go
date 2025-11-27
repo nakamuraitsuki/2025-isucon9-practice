@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -872,7 +873,7 @@ type ItemWithSellerAndBuyerAndCategory struct {
 	Category                  *Category       `db:"c"`
 	TransactionEvidenceID     *int64          `db:"transaction_evidence_id"`
 	TransactionEvidenceStatus *string         `db:"transaction_evidence_status"`
-	ShippingStatus            *string          `db:"shipping_status"`
+	ShippingStatus            *string         `db:"shipping_status"`
 	ReserveID                 *string         `db:"reserve_id"`
 }
 
@@ -1441,28 +1442,39 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scr, err := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
-		ToAddress:   buyer.Address,
-		ToName:      buyer.AccountName,
-		FromAddress: seller.Address,
-		FromName:    seller.AccountName,
-	})
-	if err != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-		tx.Rollback()
+	var wg sync.WaitGroup
+	var scr *APIShipmentCreateRes
+	var pstr *APIPaymentServiceTokenRes
+	var paymentErr error
+	wg.Add(2)
 
-		return
-	}
+	// 並列で配送API
+	go func() {
+		defer wg.Done()
+		scr, _ = APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
+			ToAddress:   buyer.Address,
+			ToName:      buyer.AccountName,
+			FromAddress: seller.Address,
+			FromName:    seller.AccountName,
+		})
+	}()
 
-	pstr, err := APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
-		ShopID: PaymentServiceIsucariShopID,
-		Token:  rb.Token,
-		APIKey: PaymentServiceIsucariAPIKey,
-		Price:  targetItem.Price,
-	})
-	if err != nil {
-		log.Print(err)
+	// 並列で決済API
+	go func() {
+		defer wg.Done()
+		pstr, paymentErr = APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
+			ShopID: PaymentServiceIsucariShopID,
+			Token:  rb.Token,
+			APIKey: PaymentServiceIsucariAPIKey,
+			Price:  targetItem.Price,
+		})
+	}()
+
+	// 並列実行を待つ
+	wg.Wait()
+
+	if paymentErr != nil {
+		log.Print(paymentErr)
 
 		outputErrorMsg(w, http.StatusInternalServerError, "payment service is failed")
 		tx.Rollback()

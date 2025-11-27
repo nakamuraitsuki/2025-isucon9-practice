@@ -5,7 +5,7 @@ PATHS=(
   "/new_items/*"
   "/users/transactions.json"
   "/users/[0-9]+.json"
-  "/items/*"
+  "/items/[a-z0-9]+.json"
   "/transactions/[0-9]+.png"
   "/upload/[a-z0-9]+.jpg"
 )
