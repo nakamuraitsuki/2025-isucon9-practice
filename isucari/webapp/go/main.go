@@ -945,6 +945,7 @@ SELECT
 
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
+		sh.status AS shipping_status,
 		sh.reserve_id AS reserve_id
 
 FROM items i
@@ -1014,6 +1015,7 @@ SELECT
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
 
+		sh.status AS shipping_status,
 		sh.reserve_id AS reserve_id
 
 FROM items i
@@ -1083,16 +1085,7 @@ LIMIT ?;
 
 		// goroutine を使わずに直列実行
 		if itemDetails[i].TransactionEvidenceID > 0 && it.ReserveID != nil && *it.ReserveID != "" {
-			ssr, err := APIShipmentStatus(getShipmentServiceURL(), &APIShipmentStatusReq{
-				ReserveID: *it.ReserveID,
-			})
-			if err != nil {
-				log.Print(err)
-				outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-				tx.Rollback()
-				return
-			}
-			itemDetails[i].ShippingStatus = ssr.Status
+			itemDetails[i].ShippingStatus = it.ShippingStatus
 		}
 	}
 
