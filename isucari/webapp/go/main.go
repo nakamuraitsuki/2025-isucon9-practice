@@ -672,42 +672,35 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 
 	var inQuery string
 	var inArgs []any
+
+	items := []Item{}
+
 	if itemID > 0 && createdAt > 0 {
-		// paging
-		inQuery, inArgs, err = sqlx.In(`
-(SELECT * FROM items
- WHERE status = "on_sale"
-   AND category_id IN (?)
-   AND (created_at, id) < (?, ?)
- ORDER BY created_at DESC, id DESC
- LIMIT ?)
-
-UNION ALL
-
-(SELECT * FROM items
- WHERE status = "sold_out"
-   AND category_id IN (?)
-   AND (created_at, id) < (?, ?)
- ORDER BY created_at DESC, id DESC
- LIMIT ?)
-
-ORDER BY created_at DESC, id DESC
-LIMIT ?`,
-			categoryIDs,
-			time.Unix(createdAt, 0),
-			itemID,
-			ItemsPerPage+1,
-			categoryIDs,
-			time.Unix(createdAt, 0),
-			itemID,
-			ItemsPerPage+1,
-			ItemsPerPage+1,
-		)
-		if err != nil {
-			log.Print(err)
-			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-			return
+		for _, s := range []string{ItemStatusOnSale, ItemStatusSoldOut} {
+			for _, c := range categoryIDs {
+				dbItems := []Item{}
+				err := dbx.Select(&dbItems,
+					"SELECT * FROM `items` WHERE `status` = ? AND `category_id` = ? AND (`created_at` < ?  OR (`created_at` <= ? AND `id` < ?)) ORDER BY `created_at` DESC, `id` DESC LIMIT ?",
+					s,
+					c,
+					time.Unix(createdAt, 0),
+					time.Unix(createdAt, 0),
+					itemID,
+					ItemsPerPage+1,
+				)
+				if err != nil {
+					log.Print(err)
+					outputErrorMsg(w, http.StatusInternalServerError, "db error")
+					return
+				}
+				items = append(items, dbItems...)
+			}
 		}
+
+		if len(items) > ItemsPerPage+1 {
+			items = items[:ItemsPerPage+1] // 先頭 max 個だけ残す
+		}
+
 	} else {
 		// 1st page
 		inQuery, inArgs, err = sqlx.In(`
@@ -735,15 +728,13 @@ LIMIT ?`,
 			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-	}
 
-	items := []Item{}
-	err = dbx.Select(&items, inQuery, inArgs...)
-
-	if err != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "db error")
-		return
+		err = dbx.Select(&items, inQuery, inArgs...)
+		if err != nil {
+			log.Print(err)
+			outputErrorMsg(w, http.StatusInternalServerError, "db error")
+			return
+		}
 	}
 
 	itemSimples := []ItemSimple{}
