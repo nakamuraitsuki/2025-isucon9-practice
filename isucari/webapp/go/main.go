@@ -680,7 +680,6 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 			ItemStatusSoldOut,
 			categoryIDs,
 			time.Unix(createdAt, 0),
-			time.Unix(createdAt, 0),
 			itemID,
 			ItemsPerPage+1,
 		)
