@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -697,8 +698,15 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if len(items) > ItemsPerPage+1 {
-			items = items[:ItemsPerPage+1] // 先頭 max 個だけ残す
+		sort.Slice(items, func(i, j int) bool {
+			if items[i].CreatedAt.Equal(items[j].CreatedAt) {
+				return items[i].ID > items[j].ID
+			}
+			return items[i].CreatedAt.After(items[j].CreatedAt)
+		})
+
+		if len(items) > ItemsPerPage {
+			items = items[:ItemsPerPage]
 		}
 
 	} else {
