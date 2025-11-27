@@ -674,13 +674,35 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 	var inArgs []any
 	if itemID > 0 && createdAt > 0 {
 		// paging
-		inQuery, inArgs, err = sqlx.In(
-			"SELECT * FROM `items` WHERE `status` IN (?,?) AND category_id IN (?) AND (`created_at`, `id`) < (?, ?) ORDER BY `created_at` DESC, `id` DESC LIMIT ?",
+		inQuery, inArgs, err = sqlx.In(`
+(SELECT * FROM items
+ WHERE status = ?
+   AND category_id IN (?)
+   AND (created_at, id) < (?, ?)
+ ORDER BY created_at DESC, id DESC
+ LIMIT ?)
+
+UNION ALL
+
+(SELECT * FROM items
+ WHERE status = ?
+   AND category_id IN (?)
+   AND (created_at, id) < (?, ?)
+ ORDER BY created_at DESC, id DESC
+ LIMIT ?)
+
+ORDER BY created_at DESC, id DESC
+LIMIT ?`,
 			ItemStatusOnSale,
+			categoryIDs,
+			time.Unix(createdAt, 0),
+			itemID,
+			ItemsPerPage+1,
 			ItemStatusSoldOut,
 			categoryIDs,
 			time.Unix(createdAt, 0),
 			itemID,
+			ItemsPerPage+1,
 			ItemsPerPage+1,
 		)
 		if err != nil {
@@ -690,11 +712,26 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 1st page
-		inQuery, inArgs, err = sqlx.In(
-			"SELECT * FROM `items` WHERE `status` IN (?,?) AND category_id IN (?) ORDER BY created_at DESC, id DESC LIMIT ?",
+		inQuery, inArgs, err = sqlx.In(`
+(SELECT * FROM items
+ WHERE status = ?
+	 AND category_id IN (?)
+ ORDER BY created_at DESC, id DESC
+ LIMIT ?)
+UNION ALL
+(SELECT * FROM items
+ WHERE status = ?
+	 AND category_id IN (?)
+ ORDER BY created_at DESC, id DESC
+ LIMIT ?)
+ORDER BY created_at DESC, id DESC
+LIMIT ?`,
 			ItemStatusOnSale,
+			categoryIDs,
+			ItemsPerPage+1,
 			ItemStatusSoldOut,
 			categoryIDs,
+			ItemsPerPage+1,
 			ItemsPerPage+1,
 		)
 		if err != nil {
