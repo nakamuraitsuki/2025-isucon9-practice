@@ -92,11 +92,11 @@ CREATE INDEX idx_items_seller_status_created_id
 CREATE INDEX idx_items_buyer_status_created_id
     ON items (buyer_id, status, created_at, id DESC);
 
-CREATE INDEX idx_items_status_category_created_id
-    ON items (status, category_id, created_at, id DESC);
-
 CREATE INDEX idx_transaction_evidences_item_id
     ON transaction_evidences(item_id);
 
 CREATE INDEX idx_shippings_transaction_evidence_id
     ON shippings(transaction_evidence_id);
+
+CREATE INDEX idx_items_status_category_created_id
+  ON items (status, category_id, created_at, id DESC);
