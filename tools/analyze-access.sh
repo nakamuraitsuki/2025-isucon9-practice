@@ -16,6 +16,6 @@ mkdir -p /home/isucon/report
 # alp コマンド実行
 sudo alp ltsv \
   --file /var/log/nginx/access-isucari.log \
-  --sort=sum -r \
+  --sort=avg -r \
   $( [ ${#PATHS[@]} -gt 0 ] && echo "-m $(IFS=,; echo "${PATHS[*]}")" ) \
   > /home/isucon/report/alp-report-$(date +%Y%m%d-%H%M%S).txt
