@@ -1056,7 +1056,6 @@ LEFT JOIN shippings sh ON te.id = sh.transaction_evidence_id;
 		}
 	}
 
-
 	hasNext := false
 	if len(itemDetails) > TransactionsPerPage {
 		hasNext = true
@@ -1432,28 +1431,14 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = dbx.Exec("INSERT INTO `shippings` (`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, `to_address`, `to_name`, `from_address`, `from_name`, `img_binary`) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-		transactionEvidenceID,
-		ShippingsStatusInitial,
-		targetItem.Name,
-		targetItem.ID,
-		0,
-		"",
-		buyer.Address,
-		buyer.AccountName,
-		seller.Address,
-		seller.AccountName,
-		"",
-	)
-
-
 	waitGroup := sync.WaitGroup{}
+	var scr *APIShipmentCreateRes
 	waitGroup.Add(2)
 
 	// 並列で配送API
 	go func() {
 		defer waitGroup.Done()
-		scr, _ := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
+		scr, _ = APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
 			ToAddress:   buyer.Address,
 			ToName:      buyer.AccountName,
 			FromAddress: seller.Address,
@@ -1505,6 +1490,20 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	waitGroup.Wait()
+
+	_, err = dbx.Exec("INSERT INTO `shippings` (`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, `to_address`, `to_name`, `from_address`, `from_name`, `img_binary`) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+		transactionEvidenceID,
+		ShippingsStatusInitial,
+		targetItem.Name,
+		targetItem.ID,
+		scr.ReserveID,
+		scr.ReserveTime,
+		buyer.Address,
+		buyer.AccountName,
+		seller.Address,
+		seller.AccountName,
+		"",
+	)
 
 	tx.Commit()
 
