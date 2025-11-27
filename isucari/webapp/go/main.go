@@ -913,11 +913,10 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tx := dbx.MustBegin()
 	items := []ItemWithSellerAndBuyerAndCategory{}
 	if itemID > 0 && createdAt > 0 {
 		// paging
-		err := tx.Select(&items, `
+		err := dbx.Select(&items, `
 SELECT
     i.id AS "id", i.seller_id AS "seller_id", i.buyer_id AS "buyer_id", i.status AS "status",
     i.name AS "name", i.price AS "price", i.description AS "description", i.image_name AS "image_name",
@@ -964,12 +963,11 @@ LEFT JOIN shippings sh ON te.id = sh.transaction_evidence_id;
 		if err != nil {
 			log.Print(err)
 			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-			tx.Rollback()
 			return
 		}
 	} else {
 		// 1st page
-		err := tx.Select(&items, `
+		err := dbx.Select(&items, `
 SELECT
     i.id AS "id", i.seller_id AS "seller_id", i.buyer_id AS "buyer_id", i.status AS "status",
     i.name AS "name", i.price AS "price", i.description AS "description", i.image_name AS "image_name",
@@ -1011,7 +1009,6 @@ LEFT JOIN shippings sh ON te.id = sh.transaction_evidence_id;
 		if err != nil {
 			log.Print(err)
 			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-			tx.Rollback()
 			return
 		}
 	}
@@ -1059,7 +1056,6 @@ LEFT JOIN shippings sh ON te.id = sh.transaction_evidence_id;
 		}
 	}
 
-	tx.Commit()
 
 	hasNext := false
 	if len(itemDetails) > TransactionsPerPage {
@@ -1366,13 +1362,11 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 
 	if targetItem.Status != ItemStatusOnSale {
 		outputErrorMsg(w, http.StatusForbidden, "item is not for sale")
-		tx.Rollback()
 		return
 	}
 
 	if targetItem.SellerID == buyer.ID {
 		outputErrorMsg(w, http.StatusForbidden, "自分の商品は買えません")
-		tx.Rollback()
 		return
 	}
 
@@ -1387,16 +1381,13 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 
 		outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-		tx.Rollback()
 		return
 	}
 
-	category, err := getCategoryByID(tx, targetItem.CategoryID)
+	category, err := getCategoryByID(dbx, targetItem.CategoryID)
 	if err != nil {
 		log.Print(err)
-
 		outputErrorMsg(w, http.StatusInternalServerError, "category id error")
-		tx.Rollback()
 		return
 	}
 
@@ -1455,7 +1446,6 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		"",
 	)
 
-	tx.Commit()
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(2)
@@ -1515,6 +1505,8 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	waitGroup.Wait()
+
+	tx.Commit()
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(resBuy{TransactionEvidenceID: transactionEvidenceID})
