@@ -872,7 +872,7 @@ type ItemWithSellerAndBuyerAndCategory struct {
 	Category                  *Category       `db:"c"`
 	TransactionEvidenceID     *int64          `db:"transaction_evidence_id"`
 	TransactionEvidenceStatus *string         `db:"transaction_evidence_status"`
-	ShippingStatus            string          `db:"shipping_status"`
+	ShippingStatus            *string          `db:"shipping_status"`
 	ReserveID                 *string         `db:"reserve_id"`
 }
 
@@ -1083,9 +1083,12 @@ LIMIT ?;
 			itemDetails[idx].TransactionEvidenceStatus = *it.TransactionEvidenceStatus
 		}
 
-		// goroutine を使わずに直列実行
 		if itemDetails[i].TransactionEvidenceID > 0 && it.ReserveID != nil && *it.ReserveID != "" {
-			itemDetails[i].ShippingStatus = it.ShippingStatus
+			if it.ShippingStatus != nil {
+				itemDetails[i].ShippingStatus = *it.ShippingStatus
+			} else {
+				itemDetails[i].ShippingStatus = ""
+			}
 		}
 	}
 
