@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -22,7 +23,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/sync/errgroup"
+
+	_ "net/http/pprof"
 )
 
 const (
@@ -375,6 +377,12 @@ func main() {
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		http.FileServerFS(root.FS()).ServeHTTP(w, r)
 	})
+
+	runtime.SetBlockProfileRate(1)
+	runtime.SetMutexProfileFraction(1)
+	go func() {
+		log.Fatal(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	log.Fatal(http.ListenAndServe(":8000", r))
 }
@@ -864,7 +872,7 @@ type ItemWithSellerAndBuyerAndCategory struct {
 	Category                  *Category       `db:"c"`
 	TransactionEvidenceID     *int64          `db:"transaction_evidence_id"`
 	TransactionEvidenceStatus *string         `db:"transaction_evidence_status"`
-	ShippingStatus            string          `db:"shipping_status"`
+	ShippingStatus            *string          `db:"shipping_status"`
 	ReserveID                 *string         `db:"reserve_id"`
 }
 
@@ -937,6 +945,7 @@ SELECT
 
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
+		sh.status AS shipping_status,
 		sh.reserve_id AS reserve_id
 
 FROM items i
@@ -1006,6 +1015,7 @@ SELECT
 		te.id AS transaction_evidence_id,
 		te.status AS transaction_evidence_status,
 
+		sh.status AS shipping_status,
 		sh.reserve_id AS reserve_id
 
 FROM items i
@@ -1040,7 +1050,6 @@ LIMIT ?;
 	}
 
 	itemDetails := make([]ItemDetail, len(items))
-	g := new(errgroup.Group)
 
 	for i, item := range items {
 		idx := i
@@ -1074,29 +1083,13 @@ LIMIT ?;
 			itemDetails[idx].TransactionEvidenceStatus = *it.TransactionEvidenceStatus
 		}
 
-		// TransactionEvidence がある場合だけ goroutine で Shipping API を呼ぶ
-		if itemDetails[idx].TransactionEvidenceID > 0 && it.ReserveID != nil && *it.ReserveID != "" {
-			idx := idx // クロージャに安全に渡す
-			reserveID := it.ReserveID
-			g.Go(func() error {
-				ssr, err := APIShipmentStatus(getShipmentServiceURL(), &APIShipmentStatusReq{
-					ReserveID: *reserveID,
-				})
-				if err != nil {
-					return err
-				}
-				itemDetails[idx].ShippingStatus = ssr.Status
-				return nil
-			})
+		if itemDetails[i].TransactionEvidenceID > 0 && it.ReserveID != nil && *it.ReserveID != "" {
+			if it.ShippingStatus != nil {
+				itemDetails[i].ShippingStatus = *it.ShippingStatus
+			} else {
+				itemDetails[i].ShippingStatus = ""
+			}
 		}
-	}
-
-	// すべての goroutine 完了を待つ
-	if err := g.Wait(); err != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-		tx.Rollback()
-		return
 	}
 
 	tx.Commit()
