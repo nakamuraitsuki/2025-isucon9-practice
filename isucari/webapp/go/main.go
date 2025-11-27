@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -1441,85 +1440,73 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var wg sync.WaitGroup
-	var scr *APIShipmentCreateRes
-	var pstr *APIPaymentServiceTokenRes
-	var paymentErr error
-	wg.Add(2)
-
-	// 並列で配送API
-	go func() {
-		defer wg.Done()
-		scr, _ = APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
-			ToAddress:   buyer.Address,
-			ToName:      buyer.AccountName,
-			FromAddress: seller.Address,
-			FromName:    seller.AccountName,
-		})
-	}()
-
-	// 並列で決済API
-	go func() {
-		defer wg.Done()
-		pstr, paymentErr = APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
-			ShopID: PaymentServiceIsucariShopID,
-			Token:  rb.Token,
-			APIKey: PaymentServiceIsucariAPIKey,
-			Price:  targetItem.Price,
-		})
-	}()
-
-	// 並列実行を待つ
-	wg.Wait()
-
-	if paymentErr != nil {
-		log.Print(paymentErr)
-
-		outputErrorMsg(w, http.StatusInternalServerError, "payment service is failed")
-		tx.Rollback()
-		return
-	}
-
-	if pstr.Status == "invalid" {
-		outputErrorMsg(w, http.StatusBadRequest, "カード情報に誤りがあります")
-		tx.Rollback()
-		return
-	}
-
-	if pstr.Status == "fail" {
-		outputErrorMsg(w, http.StatusBadRequest, "カードの残高が足りません")
-		tx.Rollback()
-		return
-	}
-
-	if pstr.Status != "ok" {
-		outputErrorMsg(w, http.StatusBadRequest, "想定外のエラー")
-		tx.Rollback()
-		return
-	}
-
-	_, err = tx.Exec("INSERT INTO `shippings` (`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, `to_address`, `to_name`, `from_address`, `from_name`, `img_binary`) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+	_, err = dbx.Exec("INSERT INTO `shippings` (`transaction_evidence_id`, `status`, `item_name`, `item_id`, `reserve_id`, `reserve_time`, `to_address`, `to_name`, `from_address`, `from_name`, `img_binary`) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
 		transactionEvidenceID,
 		ShippingsStatusInitial,
 		targetItem.Name,
 		targetItem.ID,
-		scr.ReserveID,
-		scr.ReserveTime,
+		0,
+		"",
 		buyer.Address,
 		buyer.AccountName,
 		seller.Address,
 		seller.AccountName,
 		"",
 	)
-	if err != nil {
-		log.Print(err)
-
-		outputErrorMsg(w, http.StatusInternalServerError, err.Error())
-		tx.Rollback()
-		return
-	}
 
 	tx.Commit()
+
+	// 並列で配送API
+	go func() {
+		scr, _ := APIShipmentCreate(getShipmentServiceURL(), &APIShipmentCreateReq{
+			ToAddress:   buyer.Address,
+			ToName:      buyer.AccountName,
+			FromAddress: seller.Address,
+			FromName:    seller.AccountName,
+		})
+		_, err = dbx.Exec("UPDATE `shippings` SET `reserve_id` = ?, `reserve_time` = ?, `updated_at` = ? WHERE `transaction_evidence_id` = ?",
+			scr.ReserveID,
+			scr.ReserveTime,
+			time.Now(),
+			transactionEvidenceID,
+		)
+		if err != nil {
+			log.Print(err)
+			outputErrorMsg(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}()
+
+	// 並列で決済API
+	go func() {
+		pstr, paymentErr := APIPaymentToken(getPaymentServiceURL(), &APIPaymentServiceTokenReq{
+			ShopID: PaymentServiceIsucariShopID,
+			Token:  rb.Token,
+			APIKey: PaymentServiceIsucariAPIKey,
+			Price:  targetItem.Price,
+		})
+		if paymentErr != nil {
+			log.Print(paymentErr)
+
+			outputErrorMsg(w, http.StatusInternalServerError, "payment service is failed")
+			return
+		}
+
+		if pstr.Status == "invalid" {
+			outputErrorMsg(w, http.StatusBadRequest, "カード情報に誤りがあります")
+			return
+		}
+
+		if pstr.Status == "fail" {
+			outputErrorMsg(w, http.StatusBadRequest, "カードの残高が足りません")
+			return
+		}
+
+		if pstr.Status != "ok" {
+			outputErrorMsg(w, http.StatusBadRequest, "想定外のエラー")
+			return
+		}
+	}()
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(resBuy{TransactionEvidenceID: transactionEvidenceID})
